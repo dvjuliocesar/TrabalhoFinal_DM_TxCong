@@ -1,0 +1,306 @@
+{% extends "base.html" %}
+
+{% block title %}Gráficos - Sistema Tribunal{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="display-5">
+                <i class="fas fa-chart-line text-info me-3"></i>
+                Visualizações Interativas
+            </h1>
+            <a href="{{ url_for('index') }}" class="btn btn-outline-primary">
+                <i class="fas fa-arrow-left me-2"></i>
+                Voltar aos Dados
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Metrics Cards -->
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="card text-center h-100 border-0 shadow-sm bg-warning bg-opacity-10">
+            <div class="card-body">
+                <div class="metric-icon mb-3">
+                    <i class="fas fa-hourglass-half fa-3x text-warning"></i>
+                </div>
+                <h5 class="card-title text-muted">Total Pendentes</h5>
+                <h2 class="metric-value text-warning">{{ '{:,}'.format(totals.total_pendentes).replace(',', '.') }}</h2>
+                <small class="text-muted">processos em andamento</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card text-center h-100 border-0 shadow-sm bg-success bg-opacity-10">
+            <div class="card-body">
+                <div class="metric-icon mb-3">
+                    <i class="fas fa-check-circle fa-3x text-success"></i>
+                </div>
+                <h5 class="card-title text-muted">Total Baixados</h5>
+                <h2 class="metric-value text-success">{{ '{:,}'.format(totals.total_baixados).replace(',', '.') }}</h2>
+                <small class="text-muted">processos finalizados</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card text-center h-100 border-0 shadow-sm bg-danger bg-opacity-10">
+            <div class="card-body">
+                <div class="metric-icon mb-3">
+                    <i class="fas fa-percentage fa-3x text-danger"></i>
+                </div>
+                <h5 class="card-title text-muted">Taxa de Congestionamento</h5>
+                <h2 class="metric-value text-danger">{{ '{:.2f}%'.format(totals.taxa_atual) }}</h2>
+                <small class="text-muted">média geral</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Chart Section -->
+<div class="row">
+    <div class="col-12">
+        <div class="card shadow-sm">
+            <div class="card-header bg-info text-white">
+                <h3 class="card-title mb-0">
+                    <i class="fas fa-chart-area me-2"></i>
+                    Evolução da Taxa de Congestionamento
+                </h3>
+            </div>
+            <div class="card-body">
+                <!-- Chart Container -->
+                <div id="congestion-chart" style="height: 500px;"></div>
+
+                <!-- Chart Controls -->
+                <div class="row mt-3">
+                    <div class="col-md-6">
+                        <div class="chart-info">
+                            <small class="text-muted">
+                                <i class="fas fa-info-circle me-1"></i>
+                                Clique e arraste para fazer zoom. Duplo clique para resetar.
+                            </small>
+                        </div>
+                    </div>
+                    <div class="col-md-6 text-end">
+                        <div class="btn-group btn-group-sm">
+                            <button type="button" class="btn btn-outline-secondary" onclick="resetZoom()">
+                                <i class="fas fa-expand-arrows-alt me-1"></i>Reset Zoom
+                            </button>
+                            <button type="button" class="btn btn-outline-secondary" onclick="downloadChart()">
+                                <i class="fas fa-download me-1"></i>Download PNG
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Additional Charts Row -->
+<div class="row mt-4">
+    <div class="col-md-6">
+        <div class="card shadow-sm">
+            <div class="card-header bg-secondary text-white">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-chart-pie me-2"></i>
+                    Distribuição por Entrância
+                </h5>
+            </div>
+            <div class="card-body">
+                <div id="pie-chart" style="height: 300px;"></div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card shadow-sm">
+            <div class="card-header bg-secondary text-white">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-chart-bar me-2"></i>
+                    Volume por Comarca
+                </h5>
+            </div>
+            <div class="card-body">
+                <div id="bar-chart" style="height: 300px;"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Analysis Section -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card border-0">
+            <div class="card-body">
+                <h4 class="text-center text-muted mb-4">
+                    <i class="fas fa-lightbulb me-2"></i>
+                    Insights dos Dados
+                </h4>
+                <div class="row">
+                    <div class="col-md-4 text-center">
+                        <div class="insight-item">
+                            <div class="insight-icon mb-3">
+                                <i class="fas fa-trend-up fa-2x text-warning"></i>
+                            </div>
+                            <h6>Taxa de Congestionamento</h6>
+                            <p class="text-muted small">
+                                A taxa média indica o percentual de processos que permanecem pendentes
+                            </p>
+                        </div>
+                    </div>
+                    <div class="col-md-4 text-center">
+                        <div class="insight-item">
+                            <div class="insight-icon mb-3">
+                                <i class="fas fa-balance-scale fa-2x text-info"></i>
+                            </div>
+                            <h6>Análise Comparativa</h6>
+                            <p class="text-muted small">
+                                Compare a performance entre diferentes entrâncias e comarcas
+                            </p>
+                        </div>
+                    </div>
+                    <div class="col-md-4 text-center">
+                        <div class="insight-item">
+                            <div class="insight-icon mb-3">
+                                <i class="fas fa-calendar-check fa-2x text-success"></i>
+                            </div>
+                            <h6>Tendências Temporais</h6>
+                            <p class="text-muted small">
+                                Identifique padrões sazonais e tendências ao longo do tempo
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Chart data from Flask
+const chartData = {{ graph_json|safe }};
+
+// Initialize main chart
+Plotly.newPlot('congestion-chart', chartData.data, chartData.layout, {
+    responsive: true,
+    displayModeBar: true,
+    modeBarButtonsToAdd: ['select2d', 'lasso2d'],
+    modeBarButtonsToRemove: ['autoScale2d', 'resetScale2d', 'toggleSpikelines', 'hoverClosestCartesian', 'hoverCompareCartesian']
+});
+
+// Load additional charts
+$(document).ready(function() {
+    carregarDadosAdicionais();
+});
+
+function carregarDadosAdicionais() {
+    // Fetch data for additional charts
+    fetch('/api/data')
+        .then(response => response.json())
+        .then(data => {
+            criarGraficoPizza(data.data);
+            criarGraficoBarras(data.data);
+        })
+        .catch(error => {
+            console.error('Erro ao carregar dados:', error);
+        });
+}
+
+function criarGraficoPizza(dados) {
+    // Aggregate data by entrancia
+    const entranciaData = {};
+    dados.forEach(row => {
+        if (!entranciaData[row.entrancia]) {
+            entranciaData[row.entrancia] = 0;
+        }
+        entranciaData[row.entrancia] += row.casos_novos;
+    });
+
+    const pieData = [{
+        type: 'pie',
+        labels: Object.keys(entranciaData),
+        values: Object.values(entranciaData),
+        hole: 0.4,
+        marker: {
+            colors: ['#3498db', '#e74c3c', '#2ecc71']
+        }
+    }];
+
+    const pieLayout = {
+        title: {
+            text: 'Casos Novos por Entrância',
+            font: { size: 14 }
+        },
+        showlegend: true,
+        height: 300,
+        margin: { t: 40, b: 40, l: 40, r: 40 }
+    };
+
+    Plotly.newPlot('pie-chart', pieData, pieLayout, { responsive: true, displayModeBar: false });
+}
+
+function criarGraficoBarras(dados) {
+    // Aggregate data by comarca
+    const comarcaData = {};
+    dados.forEach(row => {
+        if (!comarcaData[row.comarca]) {
+            comarcaData[row.comarca] = { casos_novos: 0, baixados: 0 };
+        }
+        comarcaData[row.comarca].casos_novos += row.casos_novos;
+        comarcaData[row.comarca].baixados += row.baixados;
+    });
+
+    const comarcas = Object.keys(comarcaData).slice(0, 8); // Top 8
+
+    const barData = [
+        {
+            x: comarcas,
+            y: comarcas.map(c => comarcaData[c].casos_novos),
+            name: 'Casos Novos',
+            type: 'bar',
+            marker: { color: '#3498db' }
+        },
+        {
+            x: comarcas,
+            y: comarcas.map(c => comarcaData[c].baixados),
+            name: 'Baixados',
+            type: 'bar',
+            marker: { color: '#2ecc71' }
+        }
+    ];
+
+    const barLayout = {
+        title: {
+            text: 'Volume por Comarca (Top 8)',
+            font: { size: 14 }
+        },
+        xaxis: { title: 'Comarca' },
+        yaxis: { title: 'Quantidade' },
+        barmode: 'group',
+        height: 300,
+        margin: { t: 40, b: 80, l: 40, r: 40 }
+    };
+
+    Plotly.newPlot('bar-chart', barData, barLayout, { responsive: true, displayModeBar: false });
+}
+
+function resetZoom() {
+    Plotly.relayout('congestion-chart', {
+        'xaxis.autorange': true,
+        'yaxis.autorange': true
+    });
+}
+
+function downloadChart() {
+    Plotly.downloadImage('congestion-chart', {
+        format: 'png',
+        width: 1200,
+        height: 600,
+        filename: 'taxa-congestionamento-' + new Date().toISOString().split('T')[0]
+    });
+}
+</script>
+{% endblock %}

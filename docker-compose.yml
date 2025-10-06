@@ -1,0 +1,40 @@
+version: '3.8'
+
+services:
+  tribunal-app:
+    build: .
+    ports:
+      - "5000:5000"
+    environment:
+      - FLASK_ENV=production
+      - SECRET_KEY=tribunal-secret-key-production
+      - MAX_CONTENT_LENGTH=104857600
+      - SNOWFLAKE_ENABLED=false
+    volumes:
+      - ./uploads:/app/uploads
+      - ./logs:/app/logs
+      - ./data:/app/data
+    restart: unless-stopped
+
+  # Base de dados PostgreSQL (opcional)
+  # postgres:
+  #   image: postgres:13
+  #   environment:
+  #     POSTGRES_DB: tribunal
+  #     POSTGRES_USER: tribunal_user
+  #     POSTGRES_PASSWORD: tribunal_password
+  #   volumes:
+  #     - postgres_data:/var/lib/postgresql/data
+  #   ports:
+  #     - "5432:5432"
+  #   restart: unless-stopped
+
+  # Redis para cache (opcional)
+  # redis:
+  #   image: redis:6-alpine
+  #   ports:
+  #     - "6379:6379"
+  #   restart: unless-stopped
+
+# volumes:
+#   postgres_data:
